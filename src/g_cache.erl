@@ -345,7 +345,7 @@ find_value(_Key, #cache_record{config=#cache_config{get_value_function=?NO_FUNCT
 find_value(Key, Record=#cache_record{config=#cache_config{get_value_function=?NO_FUNCTION, cluster_nodes=Nodes}}) -> 
 	case cluster_get(Key, Record#cache_record.name, Nodes) of
 		{ok, Value, Version} ->
-			api_store(Key, Value, ?NO_VERSION, ?USE_DEFAULT_EXPIRE, Version, Record),
+			run_store(Key, Value, Version, ?USE_DEFAULT_EXPIRE, Record),
 			{ok, Value, Version};
 		not_found -> not_found
 	end;
@@ -355,7 +355,7 @@ find_value(Key, Record=#cache_record{config=#cache_config{get_value_function=Fun
 		error -> error;
 		Value -> 
 			Version = version(),
-			api_store(Key, Value, ?NO_VERSION, ?USE_DEFAULT_EXPIRE, Version, Record),
+			run_store(Key, Value, Version, ?USE_DEFAULT_EXPIRE, Record),
 			{ok, Value, Version}
 	catch 
 		Type:Error -> 
