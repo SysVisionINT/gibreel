@@ -5,11 +5,11 @@ Gibreel
 Installation
 ------------
 
-Using rebar:
+Using rebar3:
 
 ```
 {deps, [
-	{gibreel, ".*", {hg, "https://bitbucket.org/jjmrocha/gibreel", "default"}}
+	{gibreel, {git, "https://github.com/jjmrocha/gibreel.git", {branch, "master"}}}
 ]}.
 ```
 
