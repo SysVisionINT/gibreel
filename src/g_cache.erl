@@ -345,17 +345,21 @@ find_value(_Key, #cache_record{config=#cache_config{get_value_function=?NO_FUNCT
 find_value(Key, Record=#cache_record{config=#cache_config{get_value_function=?NO_FUNCTION, cluster_nodes=Nodes}}) -> 
 	case cluster_get(Key, Record#cache_record.name, Nodes) of
 		{ok, Value, Version} ->
-			run_store(Key, Value, Version, ?USE_DEFAULT_EXPIRE, Record),
+			api_store(Key, Value, ?NO_VERSION, ?USE_DEFAULT_EXPIRE, Version, Record),
 			{ok, Value, Version};
 		not_found -> not_found
 	end;
-find_value(Key, Record=#cache_record{config=#cache_config{get_value_function=Function}}) ->
+find_value(Key, Record=#cache_record{name=CacheName, config=#cache_config{get_value_function=Function, cluster_nodes=Nodes}}) ->
 	try Function(Key) of
 		not_found -> not_found;
 		error -> error;
 		Value -> 
 			Version = version(),
-			run_store(Key, Value, Version, ?USE_DEFAULT_EXPIRE, Record),
+			Delay = ?USE_DEFAULT_EXPIRE,
+			api_store(Key, Value, ?NO_VERSION, Delay, Version, Record),
+			async:run(fun() ->
+			               cluster_notify(CacheName, {store, Key, Value, Version, Delay}, Nodes)
+			          end),
 			{ok, Value, Version}
 	catch 
 		Type:Error -> 
